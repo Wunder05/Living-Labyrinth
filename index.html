@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="icon" href="favicon.png"><title>Живой лабиринт</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0a1315;color:#e2eadb;font:14px/1.5 Arial,sans-serif}body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh}main{width:min(100vw,calc((100dvh - 54px)*1.6),1440px);position:relative}iframe{display:block;width:100%;aspect-ratio:1.6;border:0;background:#0a1315}footer{display:flex;gap:18px;align-items:center;justify-content:space-between;width:min(95vw,1400px);color:#819b94;padding:8px 12px;font-size:12px}button{font:inherit;color:#e2eadb;background:#172c2e;border:1px solid #36504c;border-radius:8px;cursor:pointer;padding:9px 16px}button:hover{border-color:#dbb76e}.mobile{display:none}.hint{margin:8px 20px;text-align:center;color:#a4b7af;font-size:13px}.pad{display:grid;grid-template-columns:repeat(3,64px);gap:8px;justify-content:center;margin:12px auto 24px;touch-action:none;user-select:none}.pad button{width:64px;height:60px;padding:0;font-size:24px;touch-action:none}.pad button:active,.pad button.held{background:#3b6258;border-color:#dbb76e}.pad .up{grid-column:2}.pad .left{grid-row:2;grid-column:1}.pad .down{grid-row:2;grid-column:2}.pad .right{grid-row:2;grid-column:3}#offline{display:none;padding:20px;color:#dbb76e}#load-note{position:fixed;bottom:8px;left:16px;color:#dbb76e;font-size:12px;pointer-events:none}
+@media(pointer:coarse),(max-width:600px){.mobile{display:block}footer{font-size:11px}.pad{display:grid}}
+@media(pointer:coarse) and (orientation:landscape){body{justify-content:flex-start}main{width:min(100vw,160dvh)}footer,.mobile{display:none}}
+@media(max-width:600px) and (orientation:portrait){body{justify-content:flex-start;padding-top:16px}main{width:100vw}footer{align-items:flex-start}footer span{max-width:65%}}
+</style></head><body>
+<div id="offline">Откройте игру через START_GAME.bat или python serve.py — браузеру нужен локальный сервер.</div>
+<main><iframe id="game" src="game.html" title="Живой лабиринт — игровое поле" allow="fullscreen" allowfullscreen></iframe></main>
+<footer><span>Живой лабиринт · Аслалиев Аслали Шумалович</span><button id="fullscreen">На весь экран</button></footer>
+<section class="mobile" aria-label="Экранное управление"><p class="hint">Для большой карты поверните телефон горизонтально.<br>Удерживайте стрелки, чтобы двигаться.</p><div class="pad"><button class="up" data-direction="up" aria-label="Вверх">▲</button><button class="left" data-direction="left" aria-label="Влево">◀</button><button class="down" data-direction="down" aria-label="Вниз">▼</button><button class="right" data-direction="right" aria-label="Вправо">▶</button></div></section>
+<div id="load-note">Первый запуск загружает Python и Pygame. Нужен интернет.</div>
+<script>
+const frame=document.getElementById('game');
+function send(data){frame.contentWindow.postMessage(data,location.origin)}
+for(const button of document.querySelectorAll('[data-direction]')){
+  button.addEventListener('pointerdown',e=>{e.preventDefault();button.setPointerCapture(e.pointerId);button.classList.add('held');send({type:'direction',direction:button.dataset.direction,down:true})});
+  for(const event of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(event,()=>{button.classList.remove('held');send({type:'direction',direction:button.dataset.direction,down:false})});
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)send({type:'clear'})});
+window.addEventListener('blur',()=>send({type:'clear'}));
+window.addEventListener('message',e=>{if(e.origin===location.origin && e.data?.type==='ready')document.getElementById('load-note').hidden=true});
+document.getElementById('fullscreen').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){document.getElementById('fullscreen').textContent='Используйте полноэкранный режим браузера'}};
+if(location.protocol==='file:'){document.getElementById('offline').style.display='block';frame.removeAttribute('src')}
+</script></body></html>
